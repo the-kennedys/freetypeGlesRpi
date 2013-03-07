@@ -6,15 +6,15 @@
 # rpi       - uses xwindows to provide event handling
 # rpi_noX   - get keyboard events from raw input, xwindows not needed
 
-#PLATFORM=xorg
-PLATFORM=rpi
+PLATFORM=xorg
+#PLATFORM=rpi
 #PLATFORM=rpi_noX
 
 ####
 
 ifeq ($(PLATFORM),xorg)
-    FLAGS= -D__FOR_XORG__ -ggdb -c  `pkg-config libpng --cflags` 
-    LIBS=-lX11 -lEGL -lGLESv2 `pkg-config libpng --libs` -lm
+    FLAGS= -D__FOR_XORG__ -ggdb -c  `pkg-config libpng --cflags` `pkg-config freetype2 --cflags` -Isrc -Itest
+    LIBS=-lX11 -lEGL -lGLESv2 `pkg-config libpng --libs` `pkg-config freetype2 --libs` -lm
 endif
 
 ifeq ($(PLATFORM),rpi)
@@ -29,27 +29,26 @@ ifeq ($(PLATFORM),rpi_noX)
     LIBS=-lX11 -lGLESv2 -lEGL -lm -lbcm_host -lfreetype -L/opt/vc/lib `pkg-config libpng --libs`
 endif
 
+TARGET=testFreetypeGlesPi
 
-CC := gcc
-SRCDIR := src
-BUILDDIR := build
-CFLAGS := $(FLAGS) -g -Wall
-TARGET := testFreetypGlesRpi
+CFLAGS += $(FLAGS)
 
-SRCEXT := c
-SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
-OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
-DEPS := $(OBJECTS:.o=.deps)
+OBJ=$(shell find src/*.c | sed 's/\(.*\.\)c/\1o/g' | sed 's/src\//build\//g')  
+TESTOBJ=$(shell find test/*.c | sed 's/\(.*\.\)c/\1o/g' | sed 's/test\//build\//g')  
 
-$(TARGET): $(OBJECTS)
+$(TARGET): $(OBJ) $(TESTOBJ)
 	@echo " Linking...";  $(CC) $(LIBS) $^ -o $(TARGET) 
 
-$(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
-	@mkdir -p $(BUILDDIR)
+build/%.o: src/%.c
+	@mkdir -p build
+	@echo " CC $<"; $(CC) $(CFLAGS) -MD -MF $(@:.o=.deps) -c -o $@ $<
+
+build/%.o: test/%.c
+	@mkdir -p build
 	@echo " CC $<"; $(CC) $(CFLAGS) -MD -MF $(@:.o=.deps) -c -o $@ $<
 
 clean:
-	@echo " Cleaning..."; $(RM) -r $(BUILDDIR) $(TARGET)
+	@echo " Cleaning..."; $(RM) -r build $(TARGET)
 
 -include $(DEPS)
 
