@@ -41,11 +41,62 @@ char * frag =
 int programHandle;
 int vertexHandle, texHandle, samplerHandle;
 
+
+// --------------------------------------------------------------- add_text ---
+void add_text( vector_t * vVector, vector_t * tVector, texture_font_t * font,
+               wchar_t * text, vec4 * color, vec2 * pen )
+{
+    size_t i;
+    float r = color->red, g = color->green, b = color->blue, a = color->alpha;
+    for( i=0; i<wcslen(text); ++i )
+    {
+        texture_glyph_t *glyph = texture_font_get_glyph( font, text[i] );
+        if( glyph != NULL )
+        {
+            int kerning = 0;
+            if( i > 0)
+            {
+                kerning = texture_glyph_get_kerning( glyph, text[i-1] );
+            }
+            pen->x += kerning;
+            int x0  = (int)( pen->x + glyph->offset_x );
+            int y0  = (int)( pen->y + glyph->offset_y );
+            int x1  = (int)( x0 + glyph->width );
+            int y1  = (int)( y0 - glyph->height );
+            float s0 = glyph->s0;
+            float t0 = glyph->t0;
+            float s1 = glyph->s1;
+            float t1 = glyph->t1;
+            float scale = 0.01;
+            GLfloat vertices[] = {
+              x0*scale,y0*scale,0,
+              x0*scale,y1*scale,0,
+              x1*scale,y1*scale,0,
+              x0*scale,y0*scale,0,
+              x1*scale,y1*scale,0,
+              x1*scale,y0*scale,0};
+            GLfloat textures[] = {
+              s0,t0,
+              s0,t1,
+              s1,t1,
+              s0,t0,
+              s1,t1,
+              s1,t0};
+            vector_push_back_data( vVector, vertices, 18);
+            vector_push_back_data( tVector, textures, 12);
+            pen->x += glyph->advance_x;
+        }
+    }
+}
+
+
+
 void render() {
 
 
     texture_glyph_t *tgp = texture_font_get_glyph( font, 'A' );
-
+    vector_t * vVector = vector_new(sizeof(GLfloat));
+    vector_t * tVector = vector_new(sizeof(GLfloat));
     GLfloat vVertices[] = { -0.1f, -0.1f, 0.0f, 
                             0.1f, 0.1f, 0.0f,
                             -0.1f, 0.1f, 0.0f,
@@ -58,8 +109,11 @@ void render() {
                             tgp->s0,tgp->t1,
                             tgp->s1,tgp->t1,
                             tgp->s1,tgp->t0 };
-
-
+    vec2 pen = {-2,-3};
+    vec4 color = {1,0,0,1};
+    
+    add_text( vVector, tVector, font,
+              L"Roller Racing", &color, &pen );
    // Clear the color buffer
    glClear ( GL_COLOR_BUFFER_BIT );
 
@@ -67,9 +121,9 @@ void render() {
    glUseProgram ( programHandle );
 
    // Load the vertex data
-   glVertexAttribPointer ( vertexHandle, 3, GL_FLOAT, GL_FALSE, 0, vVertices );
+   glVertexAttribPointer ( vertexHandle, 3, GL_FLOAT, GL_FALSE, 0, vVector->items );
    glEnableVertexAttribArray ( 0 );
-   glVertexAttribPointer ( texHandle, 2, GL_FLOAT, GL_FALSE, 0, tVertices );
+   glVertexAttribPointer ( texHandle, 2, GL_FLOAT, GL_FALSE, 0, tVector->items );
    glEnableVertexAttribArray ( 1 );
 
    glActiveTexture( GL_TEXTURE0 );
@@ -77,7 +131,7 @@ void render() {
 
    glUniform1i ( samplerHandle, 0);
 
-   glDrawArrays ( GL_TRIANGLES, 0, 6 );
+   glDrawArrays ( GL_TRIANGLES, 0, 18 );
 
    swapBuffers();
 
@@ -115,7 +169,7 @@ int main(int argc, char **argv) {
   /* Texture atlas to store individual glyphs */
   atlas = texture_atlas_new( 512, 512, 3 );
 
-  font = texture_font_new( atlas, "./fonts/Vera.ttf", 30 );
+  font = texture_font_new( atlas, "./fonts/Vera.ttf", 20 );
 
   /* Cache some glyphs to speed things up */
   texture_font_load_glyphs( font, L" !\"#$%&'()*+,-./0123456789:;<=>?"
