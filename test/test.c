@@ -20,12 +20,15 @@ texture_font_t *font;
 texture_atlas_t *atlas;
 
 char * vert = 
-  "attribute vec3		vposition;\n"
-  "attribute vec2		uv_attrib;\n"
+  "attribute vec3		a_position;\n"
+  "attribute vec4		a_color;\n"
+  "attribute vec2		a_st;\n"
   "varying vec2		        v_frag_uv;\n"
+  "varying vec4		        v_color;\n"
   "void main(void) {\n"
-  "       v_frag_uv = uv_attrib;\n"
-  "       gl_Position = vec4(vposition,1);\n"
+  "       v_frag_uv = a_st;\n"
+  "       gl_Position = vec4(a_position,1);\n"
+  "       v_color = a_color;\n"
   "}\n";
 
 
@@ -33,13 +36,14 @@ char * frag =
   "precision mediump float;\n"
   "uniform sampler2D		texture_uniform;\n"
   "varying vec2 v_frag_uv;\n"
+  "varying vec4		        v_color;\n"
   "void main()\n"
   "{\n"
-  "    gl_FragColor = texture2D(texture_uniform, v_frag_uv);\n"
+  "    gl_FragColor = texture2D(texture_uniform, v_frag_uv) * v_color;\n"
   "}\n";
 
 int programHandle;
-int vertexHandle, texHandle, samplerHandle;
+int vertexHandle, texHandle, samplerHandle, colorHandle;
 
 
 // --------------------------------------------------------------- add_text ---
@@ -68,13 +72,29 @@ void add_text( vector_t * vVector, vector_t * tVector, texture_font_t * font,
             float s1 = glyph->s1;
             float t1 = glyph->t1;
             float scale = 0.01;
+
+            // data is x,y,z,s,t,r,g,b,a
             GLfloat vertices[] = {
               x0*scale,y0*scale,0,
+              s0,t0,
+              color->x, color->y, color->z, color->a,
               x0*scale,y1*scale,0,
+              s0,t1,
+              color->x, color->y, color->z, color->a,
               x1*scale,y1*scale,0,
+              s1,t1,
+              color->x, color->y, color->z, color->a,
               x0*scale,y0*scale,0,
+              s0,t0,
+              color->x, color->y, color->z, color->a,
               x1*scale,y1*scale,0,
-              x1*scale,y0*scale,0};
+              s1,t1,
+              color->x, color->y, color->z, color->a,
+              x1*scale,y0*scale,0,
+              s1,t0,
+              color->x, color->y, color->z, color->a
+            };
+
             GLfloat textures[] = {
               s0,t0,
               s0,t1,
@@ -82,7 +102,7 @@ void add_text( vector_t * vVector, vector_t * tVector, texture_font_t * font,
               s0,t0,
               s1,t1,
               s1,t0};
-            vector_push_back_data( vVector, vertices, 18);
+            vector_push_back_data( vVector, vertices, 9*6);
             vector_push_back_data( tVector, textures, 12);
             pen->x += glyph->advance_x;
         }
@@ -121,10 +141,12 @@ void render() {
    glUseProgram ( programHandle );
 
    // Load the vertex data
-   glVertexAttribPointer ( vertexHandle, 3, GL_FLOAT, GL_FALSE, 0, vVector->items );
+   glVertexAttribPointer ( vertexHandle, 3, GL_FLOAT, GL_FALSE, 9*sizeof(GLfloat), vVector->items );
    glEnableVertexAttribArray ( 0 );
-   glVertexAttribPointer ( texHandle, 2, GL_FLOAT, GL_FALSE, 0, tVector->items );
+   glVertexAttribPointer ( texHandle, 2, GL_FLOAT, GL_FALSE, 9*sizeof(GLfloat), (GLfloat*)vVector->items+3 );
    glEnableVertexAttribArray ( 1 );
+   glVertexAttribPointer ( colorHandle, 2, GL_FLOAT, GL_FALSE, 9*sizeof(GLfloat), (GLfloat*)vVector->items+5 );
+   glEnableVertexAttribArray ( 2 );
 
    glActiveTexture( GL_TEXTURE0 );
    glBindTexture( GL_TEXTURE_2D, atlas->id );
@@ -220,8 +242,9 @@ int main(int argc, char **argv) {
 
     
     // Bind vPosition to attribute 0
-    vertexHandle = glGetAttribLocation ( programHandle, "vposition" );
-    texHandle = glGetAttribLocation ( programHandle, "uv_attrib" );
+    vertexHandle = glGetAttribLocation ( programHandle, "a_position" );
+    texHandle = glGetAttribLocation ( programHandle, "a_st" );
+    colorHandle = glGetAttribLocation ( programHandle, "a_color" );
     samplerHandle = glGetUniformLocation( programHandle, "texture_uniform" );
     printf("%d %d %d\n", vertexHandle, texHandle, samplerHandle);
 
