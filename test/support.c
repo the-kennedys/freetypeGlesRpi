@@ -96,8 +96,8 @@ void makeNativeWindow()
     swa.event_mask =
         ExposureMask | PointerMotionMask | KeyPressMask | KeyReleaseMask;
 
-    __display_width=640;
-    __display_height=480;  // xorg hard coded for now
+    __display_width=1024;
+    __display_height=768;  // xorg hard coded for now
     int s = DefaultScreen(__x_display);
     __win = XCreateSimpleWindow(__x_display, root,
                                 10, 10, __display_width, __display_height, 1,

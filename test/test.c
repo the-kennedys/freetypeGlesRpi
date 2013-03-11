@@ -56,6 +56,7 @@ int *mouse;
 struct joystick_t *joy1;
 
 texture_font_t *font;
+texture_font_t *otherFont;
 texture_atlas_t *atlas;
 
 char * vert = 
@@ -164,6 +165,12 @@ void render() {
               L"Roller Racing Demo", &transColor, &pen );
 
 
+    pen.x = -190;
+    pen.y = 0;
+
+    add_text( vVector, tVector, otherFont,
+              L"Roller Racing Demo", &color, &pen );
+
    // Clear the color buffer
    glClear ( GL_COLOR_BUFFER_BIT );
 
@@ -195,7 +202,7 @@ void render() {
    glEnable(GL_BLEND);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-   glDrawArrays ( GL_TRIANGLES, 0, 6*18*2 );
+   glDrawArrays ( GL_TRIANGLES, 0, 6*18*3 );
 
    swapBuffers();
 
@@ -239,6 +246,11 @@ int main(int argc, char **argv) {
 
   /* Cache some glyphs to speed things up */
   texture_font_load_glyphs( font, L" !\"#$%&'()*+,-./0123456789:;<=>?"
+			    L"@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_"
+			    L"`abcdefghijklmnopqrstuvwxyz{|}~");
+
+  otherFont = texture_font_new( atlas, "./fonts/ObelixPro.ttf", 40 );
+  texture_font_load_glyphs( otherFont, L" !\"#$%&'()*+,-./0123456789:;<=>?"
 			    L"@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_"
 			    L"`abcdefghijklmnopqrstuvwxyz{|}~");
 
