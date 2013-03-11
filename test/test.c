@@ -55,7 +55,7 @@ bool *keys;
 int *mouse;
 struct joystick_t *joy1;
 
-texture_font_t *font;
+texture_font_t *font1, *font2;
 texture_atlas_t *atlas;
 
 char * vert = 
@@ -87,7 +87,7 @@ int vertexHandle, texHandle, samplerHandle, colorHandle, mvpHandle;
 
 
 // --------------------------------------------------------------- add_text ---
-void add_text( vector_t * vVector, vector_t * tVector, texture_font_t * font,
+void add_text( vector_t * vVector, texture_font_t * font,
                wchar_t * text, vec4 * color, vec2 * pen )
 {
     size_t i;
@@ -145,23 +145,27 @@ void add_text( vector_t * vVector, vector_t * tVector, texture_font_t * font,
 
 void render() {
 
-
-    texture_glyph_t *tgp = texture_font_get_glyph( font, 'A' );
     vector_t * vVector = vector_new(sizeof(GLfloat));
-    vector_t * tVector = vector_new(sizeof(GLfloat));
 
-    vec2 pen = {-200,150};
+    vec2 pen = {-400,150};
     vec4 color = {.2,0.2,0.2,1};
     
-    add_text( vVector, tVector, font,
-              L"Roller Racing Demo", &color, &pen );
+    add_text( vVector, font1,
+              L"freetypeGlesRpi", &color, &pen );
 
-    pen.x = -190;
+    pen.x = -390;
     pen.y = 140;
     vec4 transColor = {1,0.3,0.3,0.6};
 
-    add_text( vVector, tVector, font,
-              L"Roller Racing Demo", &transColor, &pen );
+    add_text( vVector, font1,
+              L"freetypeGlesRpi", &transColor, &pen );
+
+    pen.x = -200;
+    pen.y = 200;
+
+
+    add_text( vVector,  font2,
+              L"freetypeGlesRpi", &color, &pen );
 
 
    // Clear the color buffer
@@ -169,10 +173,17 @@ void render() {
 
    // Use the program object
    glUseProgram ( programHandle );
+   /*
+     a 0 0 0     c s 0 0   ac as 0 0
+     0 b 0 0     s c 0 0   bs bc 0 0
+     0 0 1 0     0 0 1 0   0  0  1 0
+     0 0 0 1     0 0 0 1   0  0  0 1
+    */
+
     // Set scaling so model coords are screen coords
     GLfloat mvp[] = {
-      1.0/getDisplayWidth(), 0, 0, 0,
-      0, 1.0/getDisplayHeight(), 0, 0,
+      0.866/getDisplayWidth(), -0.5/getDisplayWidth(), 0, 0,
+      0.5/getDisplayHeight(), 0.866/getDisplayHeight(), 0, 0,
       0, 0, 1.0, 0,
       0, 0, 0, 1.0
     };
@@ -195,7 +206,7 @@ void render() {
    glEnable(GL_BLEND);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-   glDrawArrays ( GL_TRIANGLES, 0, 6*18*2 );
+   glDrawArrays ( GL_TRIANGLES, 0, vVector->size/9 );
 
    swapBuffers();
 
@@ -233,12 +244,15 @@ int main(int argc, char **argv) {
   /* Texture atlas to store individual glyphs */
   atlas = texture_atlas_new( 512, 512, 1 );
 
-  font = texture_font_new( atlas, "./fonts/custom.ttf", 50 );
-  //font = texture_font_new( atlas, "/usr/share/fonts/liberation/LiberationSans-Regular.ttf", 50 );
-
+  font1 = texture_font_new( atlas, "./fonts/custom.ttf", 50 );
+  font2 = texture_font_new( atlas, "./fonts/ObelixPro.ttf", 50 );
 
   /* Cache some glyphs to speed things up */
-  texture_font_load_glyphs( font, L" !\"#$%&'()*+,-./0123456789:;<=>?"
+  texture_font_load_glyphs( font1, L" !\"#$%&'()*+,-./0123456789:;<=>?"
+			    L"@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_"
+			    L"`abcdefghijklmnopqrstuvwxyz{|}~");
+
+  texture_font_load_glyphs( font2, L" !\"#$%&'()*+,-./0123456789:;<=>?"
 			    L"@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_"
 			    L"`abcdefghijklmnopqrstuvwxyz{|}~");
 
@@ -292,21 +306,7 @@ int main(int argc, char **argv) {
     samplerHandle = glGetUniformLocation( programHandle, "texture_uniform" );
 
     mvpHandle = glGetUniformLocation(programHandle, "u_mvp");
-    // Set scaling so mode; coords are screen coords
-    GLfloat mvp[] = {
-      1.0, 0, 0, 0,
-      0, 1.0, 0, 0,
-      0, 0, 1.0, 0,
-      0, 0, 0, 1.0
-    };
-
-    glUniformMatrix4fv(mvpHandle, 1, GL_FALSE, (GLfloat *) mvp);
-
-
-
     texture_atlas_upload(atlas);
-
-
     // count each frame
     int num_frames = 0;
 
