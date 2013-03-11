@@ -20,6 +20,7 @@ texture_font_t *font;
 texture_atlas_t *atlas;
 
 char * vert = 
+  "uniform mat4		u_mvp;\n"
   "attribute vec3		a_position;\n"
   "attribute vec4		a_color;\n"
   "attribute vec2		a_st;\n"
@@ -27,7 +28,7 @@ char * vert =
   "varying vec4		        v_color;\n"
   "void main(void) {\n"
   "       v_frag_uv = a_st;\n"
-  "       gl_Position = vec4(a_position,1);\n"
+  "       gl_Position = u_mvp * vec4(a_position,1);\n"
   "       v_color = a_color;\n"
   "}\n";
 
@@ -39,11 +40,11 @@ char * frag =
   "varying vec4		        v_color;\n"
   "void main()\n"
   "{\n"
-  "    gl_FragColor = texture2D(texture_uniform, v_frag_uv) * v_color;\n"
+  "    gl_FragColor = vec4(v_color.xyz, texture2D(texture_uniform, v_frag_uv).a);\n"
   "}\n";
 
 int programHandle;
-int vertexHandle, texHandle, samplerHandle, colorHandle;
+int vertexHandle, texHandle, samplerHandle, colorHandle, mvpHandle;
 
 
 // --------------------------------------------------------------- add_text ---
@@ -71,7 +72,7 @@ void add_text( vector_t * vVector, vector_t * tVector, texture_font_t * font,
             float t0 = glyph->t0;
             float s1 = glyph->s1;
             float t1 = glyph->t1;
-            float scale = 0.01;
+            float scale = 1;
 
             // data is x,y,z,s,t,r,g,b,a
             GLfloat vertices[] = {
@@ -129,16 +130,25 @@ void render() {
                             tgp->s0,tgp->t1,
                             tgp->s1,tgp->t1,
                             tgp->s1,tgp->t0 };
-    vec2 pen = {-2,-3};
-    vec4 color = {1,0,0,1};
+    vec2 pen = {-200,150};
+    vec4 color = {1,0.6,0.6,1};
     
     add_text( vVector, tVector, font,
-              L"Roller Racing", &color, &pen );
+              L"Roller Racing Demo", &color, &pen );
    // Clear the color buffer
    glClear ( GL_COLOR_BUFFER_BIT );
 
    // Use the program object
    glUseProgram ( programHandle );
+    // Set scaling so mode; coords are screen coords
+    GLfloat mvp[] = {
+      1.0/getDisplayWidth(), 0, 0, 0,
+      0, 1.0/getDisplayHeight(), 0, 0,
+      0, 0, 1.0, 0,
+      0, 0, 0, 1.0
+    };
+
+    glUniformMatrix4fv(mvpHandle, 1, GL_FALSE, (GLfloat *) mvp);
 
    // Load the vertex data
    glVertexAttribPointer ( vertexHandle, 3, GL_FLOAT, GL_FALSE, 9*sizeof(GLfloat), vVector->items );
@@ -153,7 +163,8 @@ void render() {
 
    glUniform1i ( samplerHandle, 0);
 
-   glDrawArrays ( GL_TRIANGLES, 0, 18 );
+   glEnable(GL_BLEND);
+   glDrawArrays ( GL_TRIANGLES, 0, 6*18 );
 
    swapBuffers();
 
@@ -189,9 +200,11 @@ int main(int argc, char **argv) {
 
 
   /* Texture atlas to store individual glyphs */
-  atlas = texture_atlas_new( 512, 512, 3 );
+  atlas = texture_atlas_new( 512, 512, 1 );
 
-  font = texture_font_new( atlas, "./fonts/Vera.ttf", 20 );
+  font = texture_font_new( atlas, "./fonts/custom.ttf", 50 );
+  //font = texture_font_new( atlas, "/usr/share/fonts/liberation/LiberationSans-Regular.ttf", 50 );
+
 
   /* Cache some glyphs to speed things up */
   texture_font_load_glyphs( font, L" !\"#$%&'()*+,-./0123456789:;<=>?"
@@ -246,7 +259,19 @@ int main(int argc, char **argv) {
     texHandle = glGetAttribLocation ( programHandle, "a_st" );
     colorHandle = glGetAttribLocation ( programHandle, "a_color" );
     samplerHandle = glGetUniformLocation( programHandle, "texture_uniform" );
-    printf("%d %d %d\n", vertexHandle, texHandle, samplerHandle);
+
+    mvpHandle = glGetUniformLocation(programHandle, "u_mvp");
+    // Set scaling so mode; coords are screen coords
+    GLfloat mvp[] = {
+      1.0, 0, 0, 0,
+      0, 1.0, 0, 0,
+      0, 0, 1.0, 0,
+      0, 0, 0, 1.0
+    };
+
+    glUniformMatrix4fv(mvpHandle, 1, GL_FALSE, (GLfloat *) mvp);
+
+
 
     texture_atlas_upload(atlas);
 
