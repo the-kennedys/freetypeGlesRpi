@@ -6,9 +6,9 @@
 # rpi       - uses xwindows to provide event handling
 # rpi_noX   - get keyboard events from raw input, xwindows not needed
 
-PLATFORM=xorg
+#PLATFORM=xorg
 #PLATFORM=rpi
-#PLATFORM=rpi_noX
+PLATFORM=rpi_noX
 
 ####
 
@@ -18,13 +18,13 @@ ifeq ($(PLATFORM),xorg)
 endif
 
 ifeq ($(PLATFORM),rpi)
-    FLAGS=-D__FOR_RPi__ -c  `pkg-config libpng --cflags` -I/usr/include/freetype2
+    FLAGS=-D__FOR_RPi__ -c  `pkg-config libpng --cflags` -I/usr/include/freetype2 -Isrc -Itest
     FLAGS+= -I/opt/vc/include/ -I/opt/vc/include/interface/vcos/pthreads/
     LIBS=-lX11 -lGLESv2 -lEGL -lm -lbcm_host -lfreetype -L/opt/vc/lib `pkg-config libpng --libs`
 endif
 
 ifeq ($(PLATFORM),rpi_noX)
-    FLAGS=-D__FOR_RPi_noX__ -c  `pkg-config libpng --cflags` -I/usr/include/freetype2
+    FLAGS=-D__FOR_RPi_noX__ -c  `pkg-config libpng --cflags` -I/usr/include/freetype2 -Isrc -Itest
     FLAGS+= -I/opt/vc/include/ -I/opt/vc/include/interface/vcos/pthreads/
     LIBS=-lX11 -lGLESv2 -lEGL -lm -lbcm_host -lfreetype -L/opt/vc/lib `pkg-config libpng --libs`
 endif

@@ -50,6 +50,7 @@
 #include <unistd.h>		// usleep
 #include <string.h>
 #include <stdio.h>
+#include <wchar.h>
 #include <math.h>
 
 bool *keys;
