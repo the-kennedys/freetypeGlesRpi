@@ -230,6 +230,7 @@ void render() {
 
    swapBuffers();
 
+   vector_delete(vVector);
 }
 
 int main(int argc, char **argv) {
