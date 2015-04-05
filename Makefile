@@ -37,7 +37,7 @@ OBJ=$(shell find src/*.c | sed 's/\(.*\.\)c/\1o/g' | sed 's/src\//build\//g')
 TESTOBJ=$(shell find test/*.c | sed 's/\(.*\.\)c/\1o/g' | sed 's/test\//build\//g')  
 
 $(TARGET): $(OBJ) $(TESTOBJ)
-	@echo " Linking...";  $(CC) $(LIBS) $^ -o $(TARGET) 
+	@echo " Linking...";  $(CC) $^ -o $(TARGET) $(LIBS)
 
 build/%.o: src/%.c
 	@mkdir -p build
