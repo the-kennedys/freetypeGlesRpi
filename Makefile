@@ -26,7 +26,7 @@ endif
 ifeq ($(PLATFORM),rpi_noX)
     FLAGS=-D__FOR_RPi_noX__ -c  `pkg-config libpng --cflags` -I/usr/include/freetype2 -Isrc -Itest
     FLAGS+= -I/opt/vc/include/ -I/opt/vc/include/interface/vcos/pthreads/
-    LIBS=-lX11 -lGLESv2 -lEGL -lm -lbcm_host -lfreetype -L/opt/vc/lib `pkg-config libpng --libs`
+    LIBS=-lGLESv2 -lEGL -lm -lbcm_host -lfreetype -L/opt/vc/lib `pkg-config libpng --libs`
 endif
 
 TARGET=testFreetypeGlesPi
