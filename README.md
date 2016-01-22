@@ -7,5 +7,5 @@ Freetype-gl is an opengl library that handles fonts by setting up a font atlas. 
 and a data structure to allow lookup for rendering. See https://code.google.com/p/freetype-gl/
 
 To make this work on the rapberry pi, I took the basic setup code from https://github.com/chriscamacho/gles2framework, 
-which sets up the openges context (it works on standard linux, rpi running X and rpi command line, based on compile time settings)
+which sets up the opengles context (it works on standard linux, rpi running X and rpi command line, based on compile time settings)
 
