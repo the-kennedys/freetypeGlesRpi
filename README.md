@@ -9,3 +9,8 @@ and a data structure to allow lookup for rendering. See https://code.google.com/
 To make this work on the rapberry pi, I took the basic setup code from https://github.com/chriscamacho/gles2framework, 
 which sets up the opengles context (it works on standard linux, rpi running X and rpi command line, based on compile time settings)
 
+Update - RPi 4
+==============
+
+Use PLATFORM=xorg in the makefile, and install the dev package:
+sudo apt-get install libgles2-mesa-dev
